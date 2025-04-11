@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Sample news data (in a real app, you would fetch this from an API)
+document.addEventListener('DOMContentLoaded', function () {
     const newsData = {
         all: [
             {
@@ -94,30 +93,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabs = document.querySelectorAll('.tab');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const navItems = document.querySelectorAll('.nav-item');
-    
+
     let currentCategory = 'all';
     let currentNewsIndex = 0;
     let currentNewsItems = [];
 
-    // Initialize the app
     function init() {
         loadNews(currentCategory);
         setupEventListeners();
     }
 
-    // Load news for a specific category
     function loadNews(category) {
-        // Show loading state
         newsContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-        
-        // Simulate API delay
+
         setTimeout(() => {
             currentNewsItems = newsData[category] || [];
             currentNewsIndex = 0;
             renderNews();
-            
-            // Update active tab
+
             tabs.forEach(tab => {
                 if (tab.dataset.category === category) {
                     tab.classList.add('active');
@@ -128,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
 
-    // Render news cards
     function renderNews() {
         if (currentNewsItems.length === 0) {
             newsContainer.innerHTML = '<div class="no-news">No news available for this category.</div>';
@@ -136,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const newsItem = currentNewsItems[currentNewsIndex];
-        
+
         const newsCard = `
             <div class="news-card">
                 <img src="${newsItem.image}" alt="${newsItem.title}" class="news-image">
@@ -150,20 +142,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `;
-        
+
         newsContainer.innerHTML = newsCard;
         updateNavButtons();
     }
 
-    // Update navigation button states
     function updateNavButtons() {
         prevBtn.disabled = currentNewsIndex === 0;
         nextBtn.disabled = currentNewsIndex === currentNewsItems.length - 1;
     }
 
-    // Set up event listeners
     function setupEventListeners() {
-        // Tab click events
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 currentCategory = tab.dataset.category;
@@ -171,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Navigation button events
         prevBtn.addEventListener('click', () => {
             if (currentNewsIndex > 0) {
                 currentNewsIndex--;
@@ -186,15 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Bottom nav items
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                navItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-            });
-        });
-
-        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
                 currentNewsIndex--;
@@ -206,6 +185,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize the app
     init();
 });
