@@ -1,115 +1,78 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const newsData = {
-        all: [
-            {
-                title: "Bangladesh's GDP grows at 6.5% in Q1 FY24",
-                desc: "Bangladesh's economy showed resilience with a 6.5% growth in the first quarter, driven by strong performances in the manufacturing and export sectors despite global economic challenges.",
-                image: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Flag_of_Bangladesh.svg",
-                source: "The Daily Star",
-                date: "2h ago"
-            },
-            {
-                title: "New metro rail line opens in Dhaka",
-                desc: "The much-anticipated second line of Dhaka Metro Rail has begun operations, connecting Motijheel to Kamalapur, expected to significantly reduce traffic congestion in the capital city.",
-                image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Dhaka Tribune",
-                date: "5h ago"
-            },
-            {
-                title: "Bangladesh wins SAFF Championship 2023",
-                desc: "The Bangladesh national football team clinched the SAFF Championship title after a thrilling penalty shootout against Nepal, marking their second championship win in history.",
-                image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Prothom Alo",
-                date: "1d ago"
-            }
-        ],
-        technology: [
-            {
-                title: "Bangladeshi startup raises $5M in Series A funding",
-                desc: "Local fintech startup 'Sheba.xyz' has secured $5 million in Series A funding led by international investors, planning to expand its service platform across Bangladesh.",
-                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "TechBangla",
-                date: "3h ago"
-            },
-            {
-                title: "Government launches digital farming initiative",
-                desc: "The Agriculture Ministry has launched a nationwide digital farming platform to connect farmers with markets, weather data, and agricultural advice through mobile apps.",
-                image: "https://images.unsplash.com/photo-1586771107445-d3ca888129ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Bangladesh Today",
-                date: "1d ago"
-            }
-        ],
-        business: [
-            {
-                title: "Bangladesh Bank keeps interest rates unchanged",
-                desc: "In its latest monetary policy, Bangladesh Bank has maintained the repo rate at 6% to support economic growth while keeping inflation in check.",
-                image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Financial Express",
-                date: "4h ago"
-            },
-            {
-                title: "RMG exports show 12% growth this quarter",
-                desc: "Bangladesh's ready-made garment sector reports 12% year-on-year growth in exports, with the EU and US remaining top destinations for apparel products.",
-                image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Textile Today",
-                date: "1d ago"
-            }
-        ],
-        sports: [
-            {
-                title: "Shakib returns as ODI captain",
-                desc: "The Bangladesh Cricket Board has reappointed Shakib Al Hasan as the ODI team captain for the upcoming Asia Cup and World Cup tournaments.",
-                image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "CricBuzz",
-                date: "6h ago"
-            },
-            {
-                title: "Bangladesh to host U-19 Cricket World Cup",
-                desc: "The ICC has announced Bangladesh as host for the 2024 U-19 Cricket World Cup, with matches to be played across four venues in Dhaka and Chittagong.",
-                image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "ESPNcricinfo",
-                date: "1d ago"
-            }
-        ],
-        entertainment: [
-            {
-                title: "Bangladeshi film selected for Toronto Film Festival",
-                desc: "Independent film 'Mujib: The Making of a Nation' has been officially selected for screening at the prestigious Toronto International Film Festival next month.",
-                image: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Channel i",
-                date: "1d ago"
-            },
-            {
-                title: "Popular band announces reunion concert",
-                desc: "Legendary Bangladeshi rock band Miles is set to perform a reunion concert next month after a decade-long hiatus, with tickets selling out within hours.",
-                image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-                source: "Daily Sun",
-                date: "3h ago"
-            }
-        ]
-    };
+    const API_KEY = 'ce0cfb7153014e7fbd7cb663aa576ce9';
+    const BASE_URL = 'https://newsapi.org/v2/top-headlines';
+    const COUNTRY = 'us'; // You can change this to your preferred country
 
     const newsContainer = document.getElementById('newsContainer');
     const tabs = document.querySelectorAll('.tab');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
 
-    let currentCategory = 'all';
+    // Modal elements
+    const searchModal = document.getElementById('searchModal');
+    const profileModal = document.getElementById('profileModal');
+    const searchIcon = document.querySelector('.fa-search').parentElement;
+    const userIcon = document.querySelector('.fa-user').parentElement;
+    const closeModalButtons = document.querySelectorAll('.close-modal');
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const signInBtn = document.getElementById('signInBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+
+    let currentCategory = 'general';
     let currentNewsIndex = 0;
     let currentNewsItems = [];
+    let isLoading = false;
+    let searchTimeout;
 
     function init() {
         loadNews(currentCategory);
         setupEventListeners();
+        setupModalListeners();
     }
 
-    function loadNews(category) {
-        newsContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    async function loadNews(category) {
+        if (isLoading) return;
 
-        setTimeout(() => {
-            currentNewsItems = newsData[category] || [];
-            currentNewsIndex = 0;
-            renderNews();
+        isLoading = true;
+        newsContainer.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading news...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(`${BASE_URL}?country=${COUNTRY}&category=${category}&apiKey=${API_KEY}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                currentNewsItems = data.articles
+                    .filter(article => article.title && article.title !== '[Removed]')
+                    .map(article => ({
+                        title: article.title,
+                        desc: article.description || 'No description available',
+                        image: article.urlToImage || 'https://via.placeholder.com/600x400?text=No+Image',
+                        source: article.source.name || 'Unknown source',
+                        date: formatDate(article.publishedAt),
+                        url: article.url
+                    }));
+
+                currentNewsIndex = 0;
+                renderNews();
+            } else {
+                showNoNewsMessage();
+            }
+        } catch (error) {
+            console.error('Error fetching news:', error);
+            showErrorMessage();
+        } finally {
+            isLoading = false;
 
             tabs.forEach(tab => {
                 if (tab.dataset.category === category) {
@@ -118,12 +81,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     tab.classList.remove('active');
                 }
             });
-        }, 500);
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+        if (diffInHours < 1) {
+            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+            return `${diffInMinutes}m ago`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours}h ago`;
+        } else {
+            const diffInDays = Math.floor(diffInHours / 24);
+            return `${diffInDays}d ago`;
+        }
     }
 
     function renderNews() {
         if (currentNewsItems.length === 0) {
-            newsContainer.innerHTML = '<div class="no-news">No news available for this category.</div>';
+            showNoNewsMessage();
             return;
         }
 
@@ -131,10 +110,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const newsCard = `
             <div class="news-card">
-                <img src="${newsItem.image}" alt="${newsItem.title}" class="news-image">
+                <img src="${newsItem.image}" alt="${newsItem.title}" class="news-image" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Available'">
                 <div class="news-content">
                     <h3 class="news-title">${newsItem.title}</h3>
                     <p class="news-desc">${newsItem.desc}</p>
+                    <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="read-more">Read more →</a>
                     <div class="news-source">
                         <span>${newsItem.source}</span>
                         <span>${newsItem.date}</span>
@@ -147,16 +127,36 @@ document.addEventListener('DOMContentLoaded', function () {
         updateNavButtons();
     }
 
+    function showNoNewsMessage() {
+        newsContainer.innerHTML = '<div class="no-news">No news available for this category.</div>';
+        updateNavButtons();
+    }
+
+    function showErrorMessage() {
+        newsContainer.innerHTML = `
+            <div class="error-message">
+                Failed to load news. Please try again later.
+                <button onclick="window.location.reload()" style="margin-top: 10px; background: #1d9bf0; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
+                    Retry
+                </button>
+            </div>
+        `;
+        updateNavButtons();
+    }
+
     function updateNavButtons() {
-        prevBtn.disabled = currentNewsIndex === 0;
-        nextBtn.disabled = currentNewsIndex === currentNewsItems.length - 1;
+        prevBtn.disabled = currentNewsIndex === 0 || currentNewsItems.length === 0;
+        nextBtn.disabled = currentNewsIndex === currentNewsItems.length - 1 || currentNewsItems.length === 0;
     }
 
     function setupEventListeners() {
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                currentCategory = tab.dataset.category;
-                loadNews(currentCategory);
+                const category = tab.dataset.category;
+                if (category !== currentCategory) {
+                    currentCategory = category;
+                    loadNews(currentCategory);
+                }
             });
         });
 
@@ -181,6 +181,140 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
                 currentNewsIndex++;
                 renderNews();
+            }
+        });
+
+        // Swipe support for mobile devices
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        newsContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        newsContainer.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50;
+            const difference = touchStartX - touchEndX;
+
+            if (difference > threshold && !nextBtn.disabled) {
+                // Swipe left - next news
+                currentNewsIndex++;
+                renderNews();
+            } else if (difference < -threshold && !prevBtn.disabled) {
+                // Swipe right - previous news
+                currentNewsIndex--;
+                renderNews();
+            }
+        }
+    }
+
+    function setupModalListeners() {
+        // Open modals when icons are clicked
+        searchIcon.addEventListener('click', () => {
+            searchModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            searchInput.focus();
+        });
+
+        userIcon.addEventListener('click', () => {
+            profileModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        });
+
+        // Close modals when X is clicked
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                searchModal.style.display = 'none';
+                profileModal.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Re-enable scrolling
+            });
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                searchModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+            if (e.target === profileModal) {
+                profileModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value.trim();
+
+            if (query.length < 3) {
+                searchResults.innerHTML = '<div class="no-results">Enter at least 3 characters to search</div>';
+                return;
+            }
+
+            searchResults.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 500);
+        });
+
+        // Profile functionality
+        signInBtn.addEventListener('click', () => {
+            alert('Sign in functionality would be implemented here.\nThis could connect to Firebase Auth, Google Sign-In, etc.');
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            alert('Settings functionality would be implemented here.\nThis could include theme preferences, notification settings, etc.');
+        });
+    }
+
+    async function performSearch(query) {
+        try {
+            const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&apiKey=${API_KEY}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                displaySearchResults(data.articles);
+            } else {
+                searchResults.innerHTML = '<div class="no-results">No results found for your search</div>';
+            }
+        } catch (error) {
+            console.error('Error searching news:', error);
+            searchResults.innerHTML = '<div class="error-message">Failed to search. Please try again.</div>';
+        }
+    }
+
+    function displaySearchResults(articles) {
+        searchResults.innerHTML = '';
+
+        if (articles.length === 0) {
+            searchResults.innerHTML = '<div class="no-results">No results found</div>';
+            return;
+        }
+
+        articles.slice(0, 10).forEach(article => {
+            if (article.title && article.title !== '[Removed]') {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.innerHTML = `
+                    <h4>${article.title}</h4>
+                    <p class="news-source">${article.source?.name || 'Unknown'} • ${formatDate(article.publishedAt)}</p>
+                `;
+                resultItem.addEventListener('click', () => {
+                    window.open(article.url, '_blank');
+                });
+                searchResults.appendChild(resultItem);
             }
         });
     }
