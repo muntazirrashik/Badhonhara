@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const API_KEY = 'ce0cfb7153014e7fbd7cb663aa576ce9';
     const BASE_URL = 'https://newsapi.org/v2/top-headlines';
-    const COUNTRY = 'us'; // You can change this to your preferred country
+    const COUNTRY = 'us';
 
     const newsContainer = document.getElementById('newsContainer');
     const tabs = document.querySelectorAll('.tab');
@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let isLoading = false;
     let searchTimeout;
 
+    init();
+
     function init() {
         loadNews(currentCategory);
         setupEventListeners();
@@ -33,8 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadNews(category) {
         if (isLoading) return;
-
         isLoading = true;
+
         newsContainer.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
@@ -44,21 +46,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const response = await fetch(`${BASE_URL}?country=${COUNTRY}&category=${category}&apiKey=${API_KEY}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
 
-            if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+            if (data.status === 'ok' && data.articles.length) {
                 currentNewsItems = data.articles
                     .filter(article => article.title && article.title !== '[Removed]')
                     .map(article => ({
                         title: article.title,
                         desc: article.description || 'No description available',
                         image: article.urlToImage || 'https://via.placeholder.com/600x400?text=No+Image',
-                        source: article.source.name || 'Unknown source',
+                        source: article.source.name || 'Unknown',
                         date: formatDate(article.publishedAt),
                         url: article.url
                     }));
@@ -68,63 +65,55 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 showNoNewsMessage();
             }
-        } catch (error) {
-            console.error('Error fetching news:', error);
+        } catch (err) {
+            console.error('Error fetching news:', err);
             showErrorMessage();
         } finally {
             isLoading = false;
-
-            tabs.forEach(tab => {
-                if (tab.dataset.category === category) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
+            tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.category === category));
         }
     }
 
-    function formatDate(dateString) {
-        const date = new Date(dateString);
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
         const now = new Date();
-        const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+        const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
 
-        if (diffInHours < 1) {
-            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-            return `${diffInMinutes}m ago`;
-        } else if (diffInHours < 24) {
-            return `${diffInHours}h ago`;
-        } else {
-            const diffInDays = Math.floor(diffInHours / 24);
-            return `${diffInDays}d ago`;
-        }
+        if (diffHours < 1) return `${Math.floor((now - date) / (1000 * 60))}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${Math.floor(diffHours / 24)}d ago`;
     }
 
     function renderNews() {
-        if (currentNewsItems.length === 0) {
-            showNoNewsMessage();
-            return;
-        }
+        if (!currentNewsItems.length) return showNoNewsMessage();
+        const item = currentNewsItems[currentNewsIndex];
 
-        const newsItem = currentNewsItems[currentNewsIndex];
-
-        const newsCard = `
+        newsContainer.innerHTML = `
             <div class="news-card">
-                <img src="${newsItem.image}" alt="${newsItem.title}" class="news-image" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Available'">
+                <img src="${item.image}" alt="${item.title}" class="news-image"
+                    onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Available'">
                 <div class="news-content">
-                    <h3 class="news-title">${newsItem.title}</h3>
-                    <p class="news-desc">${newsItem.desc}</p>
-                    <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="read-more">Read more →</a>
+                    <h3 class="news-title">${item.title}</h3>
+                    <p class="news-desc">${item.desc}</p>
                     <div class="news-source">
-                        <span>${newsItem.source}</span>
-                        <span>${newsItem.date}</span>
+                        <span>${item.source}</span>
+                        <span>${item.date}</span>
                     </div>
+                    ${item.url ? `<button class="view-original-btn" data-url="${item.url}">View Original Article</button>` : ''}
                 </div>
             </div>
         `;
 
-        newsContainer.innerHTML = newsCard;
+        document.querySelector('.view-original-btn')?.addEventListener('click', (e) => {
+            window.open(e.target.dataset.url, '_blank');
+        });
+
         updateNavButtons();
+    }
+
+    function updateNavButtons() {
+        prevBtn.disabled = currentNewsIndex === 0;
+        nextBtn.disabled = currentNewsIndex === currentNewsItems.length - 1;
     }
 
     function showNoNewsMessage() {
@@ -136,17 +125,10 @@ document.addEventListener('DOMContentLoaded', function () {
         newsContainer.innerHTML = `
             <div class="error-message">
                 Failed to load news. Please try again later.
-                <button onclick="window.location.reload()" style="margin-top: 10px; background: #1d9bf0; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
-                    Retry
-                </button>
+                <button onclick="window.location.reload()" style="margin-top: 10px;">Retry</button>
             </div>
         `;
         updateNavButtons();
-    }
-
-    function updateNavButtons() {
-        prevBtn.disabled = currentNewsIndex === 0 || currentNewsItems.length === 0;
-        nextBtn.disabled = currentNewsIndex === currentNewsItems.length - 1 || currentNewsItems.length === 0;
     }
 
     function setupEventListeners() {
@@ -155,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const category = tab.dataset.category;
                 if (category !== currentCategory) {
                     currentCategory = category;
-                    loadNews(currentCategory);
+                    loadNews(category);
                 }
             });
         });
@@ -174,150 +156,99 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
-                currentNewsIndex--;
-                renderNews();
-            } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
-                currentNewsIndex++;
-                renderNews();
-            }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' && !prevBtn.disabled) prevBtn.click();
+            if (e.key === 'ArrowRight' && !nextBtn.disabled) nextBtn.click();
         });
 
-        // Swipe support for mobile devices
+        // Swipe support
         let touchStartX = 0;
-        let touchEndX = 0;
-
-        newsContainer.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
+        newsContainer.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, { passive: true });
+        newsContainer.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const delta = touchStartX - touchEndX;
+            if (delta > 50 && !nextBtn.disabled) nextBtn.click();
+            if (delta < -50 && !prevBtn.disabled) prevBtn.click();
         }, { passive: true });
-
-        newsContainer.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
-            const threshold = 50;
-            const difference = touchStartX - touchEndX;
-
-            if (difference > threshold && !nextBtn.disabled) {
-                // Swipe left - next news
-                currentNewsIndex++;
-                renderNews();
-            } else if (difference < -threshold && !prevBtn.disabled) {
-                // Swipe right - previous news
-                currentNewsIndex--;
-                renderNews();
-            }
-        }
     }
 
     function setupModalListeners() {
-        // Open modals when icons are clicked
         searchIcon.addEventListener('click', () => {
             searchModal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            document.body.style.overflow = 'hidden';
             searchInput.focus();
         });
 
         userIcon.addEventListener('click', () => {
             profileModal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            document.body.style.overflow = 'hidden';
         });
 
-        // Close modals when X is clicked
-        closeModalButtons.forEach(button => {
-            button.addEventListener('click', () => {
+        closeModalButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
                 searchModal.style.display = 'none';
                 profileModal.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Re-enable scrolling
+                document.body.style.overflow = 'auto';
             });
         });
 
-        // Close modals when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === searchModal) {
+        window.addEventListener('click', e => {
+            if (e.target === searchModal || e.target === profileModal) {
                 searchModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-            if (e.target === profileModal) {
                 profileModal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
         });
 
-        // Search functionality
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             const query = searchInput.value.trim();
-
             if (query.length < 3) {
-                searchResults.innerHTML = '<div class="no-results">Enter at least 3 characters to search</div>';
+                searchResults.innerHTML = '<div class="no-results">Enter at least 3 characters</div>';
                 return;
             }
-
             searchResults.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
-
-            searchTimeout = setTimeout(() => {
-                performSearch(query);
-            }, 500);
+            searchTimeout = setTimeout(() => performSearch(query), 500);
         });
 
-        // Profile functionality
         signInBtn.addEventListener('click', () => {
-            alert('Sign in functionality would be implemented here.\nThis could connect to Firebase Auth, Google Sign-In, etc.');
+            alert('Sign in functionality would be implemented here.');
         });
 
         settingsBtn.addEventListener('click', () => {
-            alert('Settings functionality would be implemented here.\nThis could include theme preferences, notification settings, etc.');
+            alert('Settings functionality would be implemented here.');
         });
     }
 
     async function performSearch(query) {
         try {
             const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&apiKey=${API_KEY}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
 
-            if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+            if (data.status === 'ok' && data.articles.length > 0) {
                 displaySearchResults(data.articles);
             } else {
-                searchResults.innerHTML = '<div class="no-results">No results found for your search</div>';
+                searchResults.innerHTML = '<div class="no-results">No results found</div>';
             }
-        } catch (error) {
-            console.error('Error searching news:', error);
+        } catch (err) {
+            console.error('Search error:', err);
             searchResults.innerHTML = '<div class="error-message">Failed to search. Please try again.</div>';
         }
     }
 
     function displaySearchResults(articles) {
         searchResults.innerHTML = '';
-
-        if (articles.length === 0) {
-            searchResults.innerHTML = '<div class="no-results">No results found</div>';
-            return;
-        }
-
         articles.slice(0, 10).forEach(article => {
-            if (article.title && article.title !== '[Removed]') {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'search-result-item';
-                resultItem.innerHTML = `
-                    <h4>${article.title}</h4>
-                    <p class="news-source">${article.source?.name || 'Unknown'} • ${formatDate(article.publishedAt)}</p>
-                `;
-                resultItem.addEventListener('click', () => {
-                    window.open(article.url, '_blank');
-                });
-                searchResults.appendChild(resultItem);
-            }
+            const div = document.createElement('div');
+            div.className = 'search-result';
+            div.innerHTML = `
+                <h4>${article.title}</h4>
+                <p>${article.source.name} - ${formatDate(article.publishedAt)}</p>
+            `;
+            div.addEventListener('click', () => {
+                window.open(article.url, '_blank');
+            });
+            searchResults.appendChild(div);
         });
     }
-
-    init();
 });
