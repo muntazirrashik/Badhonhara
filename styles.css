@@ -3,11 +3,13 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
     background-color: #000;
     color: #e7e9ea;
+    touch-action: manipulation;
 }
 
 .app-container {
@@ -18,6 +20,7 @@ body {
     position: relative;
     border-left: 1px solid #2f3336;
     border-right: 1px solid #2f3336;
+    overflow-x: hidden;
 }
 
 header {
@@ -38,7 +41,7 @@ header {
 
 .logo {
     font-weight: 700;
-    font-size: 20px;
+    font-size: clamp(18px, 4vw, 20px);
     color: #ffffff;
 }
 
@@ -48,41 +51,55 @@ header {
 }
 
 .icon-container {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    cursor: pointer;
 }
 
 .icon-container:hover {
     background-color: #181818;
 }
 
-.category-tabs {
-    display: flex;
-    overflow-x: auto;
-    border-bottom: 1px solid #2f3336;
+.category-tabs-container {
     position: sticky;
     top: 60px;
     z-index: 99;
     background-color: #000;
+    border-bottom: 1px solid #2f3336;
+    overflow: hidden;
+}
+
+.category-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .tab {
-    padding: 16px;
+    padding: 16px 12px;
     white-space: nowrap;
     cursor: pointer;
-    font-size: 15px;
+    font-size: clamp(14px, 3.5vw, 15px);
     font-weight: 500;
     color: #71767b;
     position: relative;
-    flex: 1;
+    flex: 0 0 auto;
     text-align: center;
     min-width: 80px;
+    user-select: none;
 }
 
 .tab.active {
@@ -121,9 +138,11 @@ header {
     width: 100%;
     border-radius: 16px;
     margin-bottom: 12px;
-    max-height: 300px;
+    max-height: 50vh;
     object-fit: cover;
     border: 1px solid #2f3336;
+    aspect-ratio: 16/9;
+    background-color: #2f3336;
 }
 
 .news-content {
@@ -133,19 +152,19 @@ header {
 }
 
 .news-title {
-    font-size: 17px;
+    font-size: clamp(16px, 4vw, 17px);
     font-weight: 700;
     line-height: 1.3;
 }
 
 .news-desc {
-    font-size: 15px;
+    font-size: clamp(14px, 3.8vw, 15px);
     color: #e7e9ea;
     line-height: 1.5;
 }
 
 .news-source {
-    font-size: 13px;
+    font-size: clamp(12px, 3.2vw, 13px);
     color: #71767b;
     display: flex;
     justify-content: space-between;
@@ -163,6 +182,7 @@ header {
     max-width: 600px;
     margin: 0 auto;
     z-index: 98;
+    pointer-events: none;
 }
 
 .nav-btn {
@@ -171,6 +191,8 @@ header {
     border: none;
     width: 50px;
     height: 50px;
+    min-width: 50px;
+    min-height: 50px;
     border-radius: 50%;
     font-size: 18px;
     cursor: pointer;
@@ -179,6 +201,7 @@ header {
     justify-content: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     transition: background-color 0.2s;
+    pointer-events: auto;
 }
 
 .nav-btn:hover {
@@ -193,8 +216,16 @@ header {
 
 .loading {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     padding: 40px;
+    gap: 20px;
+}
+
+.loading p {
+    color: #71767b;
+    font-size: clamp(14px, 4vw, 16px);
 }
 
 .spinner {
@@ -215,10 +246,14 @@ header {
     padding: 40px;
     text-align: center;
     color: #71767b;
+    font-size: clamp(14px, 4vw, 16px);
 }
 
-.category-tabs::-webkit-scrollbar {
-    display: none;
+.error-message {
+    padding: 40px;
+    text-align: center;
+    color: #f4212e;
+    font-size: clamp(14px, 4vw, 16px);
 }
 
 .tab:hover {
@@ -229,31 +264,233 @@ header {
     color: #e7e9ea;
 }
 
+.read-more {
+    color: #1d9bf0;
+    font-size: clamp(13px, 3.5vw, 14px);
+    margin-top: 8px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.read-more:hover {
+    text-decoration: underline;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #000;
+    margin: 5% auto;
+    max-width: 600px;
+    border-radius: 16px;
+    border: 1px solid #2f3336;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #2f3336;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #e7e9ea;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 8px;
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.search-input-container {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.search-input-container i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #71767b;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    background-color: #202327;
+    border: 1px solid #2f3336;
+    border-radius: 24px;
+    color: #e7e9ea;
+    font-size: 15px;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #1d9bf0;
+}
+
+.search-results {
+    margin-top: 16px;
+}
+
+.search-result-item {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+    background-color: #080808;
+}
+
+.profile-info {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.profile-pic {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    color: #71767b;
+}
+
+.profile-pic i {
+    font-size: 80px;
+}
+
+.profile-info h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.profile-info p {
+    color: #71767b;
+    font-size: 14px;
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-btn {
+    padding: 12px;
+    border-radius: 24px;
+    border: 1px solid #2f3336;
+    background-color: transparent;
+    color: #e7e9ea;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.profile-btn:hover {
+    background-color: #080808;
+}
+
+.profile-btn i {
+    font-size: 16px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 480px) {
-    .logo {
-        font-size: 18px;
+    .icon-container {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
     }
     
     .news-container {
-        padding-bottom: 80px;
+        padding-bottom: 90px;
     }
     
     .navigation-buttons {
         bottom: 10px;
+        padding: 12px;
     }
     
     .nav-btn {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .news-image {
-        max-height: 200px;
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        min-height: 46px;
+        font-size: 16px;
     }
     
     .tab {
         min-width: 70px;
-        padding: 16px 12px;
-        font-size: 14px;
+        padding: 14px 10px;
+    }
+    
+    .news-card {
+        padding: 14px;
+    }
+    
+    .news-image {
+        max-height: 45vh;
+    }
+
+    .modal-content {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+    }
+}
+
+@media (max-width: 375px) {
+    .nav-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .tab {
+        min-width: 65px;
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+    
+    .news-container {
+        padding: 12px;
+        padding-bottom: 85px;
     }
 }
