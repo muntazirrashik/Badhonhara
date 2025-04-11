@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
             {
                 title: "Bangladesh's GDP grows at 6.5% in Q1 FY24",
                 desc: "Bangladesh's economy showed resilience with a 6.5% growth in the first quarter, driven by strong performances in the manufacturing and export sectors despite global economic challenges.",
-                image: "https://images.unsplash.com/photo-1584696049838-8e692282a2b7?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+                image: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Flag_of_Bangladesh.svg",
                 source: "The Daily Star",
                 date: "2h ago"
             },
