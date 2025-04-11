@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Badhonhara</title>
     
     <!-- Favicon -->
@@ -18,31 +18,81 @@
             <div class="header-content">
                 <div class="logo">Badhonhara</div>
                 <div class="header-icons">
-                    <div class="icon-container">
+                    <div class="icon-container" aria-label="Search">
                         <i class="fas fa-search"></i>
                     </div>
-                    <div class="icon-container">
+                    <div class="icon-container" aria-label="Profile">
                         <i class="fas fa-user"></i>
                     </div>
                 </div>
             </div>
         </header>
 
-        <div class="category-tabs">
-            <div class="tab active" data-category="all">For You</div>
-            <div class="tab" data-category="technology">Technology</div>
-            <div class="tab" data-category="business">Business</div>
-            <div class="tab" data-category="sports">Sports</div>
-            <div class="tab" data-category="entertainment">Entertainment</div>
+        <div class="category-tabs-container">
+            <div class="category-tabs">
+                <div class="tab active" data-category="general">For You</div>
+                <div class="tab" data-category="technology">Technology</div>
+                <div class="tab" data-category="business">Business</div>
+                <div class="tab" data-category="sports">Sports</div>
+                <div class="tab" data-category="entertainment">Entertainment</div>
+                <div class="tab" data-category="health">Health</div>
+            </div>
         </div>
 
         <div class="news-container" id="newsContainer">
-            <!-- News cards will be inserted here by JavaScript -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading news...</p>
+            </div>
         </div>
 
         <div class="navigation-buttons">
-            <button id="prevBtn" class="nav-btn"><i class="fas fa-arrow-left"></i></button>
-            <button id="nextBtn" class="nav-btn"><i class="fas fa-arrow-right"></i></button>
+            <button id="prevBtn" class="nav-btn" aria-label="Previous news"><i class="fas fa-arrow-left"></i></button>
+            <button id="nextBtn" class="nav-btn" aria-label="Next news"><i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal" id="searchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Search News</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search for news...">
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Your Profile</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-info">
+                    <div class="profile-pic">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h4>Guest User</h4>
+                    <p>Sign in to customize your news feed</p>
+                </div>
+                <div class="profile-actions">
+                    <button class="profile-btn" id="signInBtn">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                    <button class="profile-btn" id="settingsBtn">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
